@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Car price estimator</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f4f7; margin: 0; padding: 30px 15px; }
+    .card { max-width: 420px; margin: auto; background: white; padding: 25px 30px;
+            border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { font-size: 22px; color: #1f4e79; margin-top: 0; }
+    label { display: block; margin-top: 12px; font-weight: bold; font-size: 14px; }
+    select, input { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box;
+                    border: 1px solid #ccc; border-radius: 5px; font-size: 15px; }
+    button { width: 100%; margin-top: 20px; padding: 10px; background: #1f4e79; color: white;
+             border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #163a5a; }
+    .result { margin-top: 20px; padding: 15px; background: #e6f4ea; border-radius: 5px;
+              text-align: center; font-size: 20px; }
+    .error { margin-top: 20px; padding: 12px; background: #fdecea; border-radius: 5px; color: #a12622; }
+    .note { margin-top: 20px; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Used car price estimator</h1>
+
+    <form method="post">
+      <label>Brand</label>
+      <select name="brand" id="brand">
+        {% for b in info.brands %}
+          <option {% if values.brand == b %}selected{% endif %}>{{ b }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Model</label>
+      <select name="model" id="model"
+              data-models-by-brand='{{ info.models_by_brand | tojson }}'
+              data-selected='{{ (values.model or "") | tojson }}'></select>
+
+      <label>Manufacturing year</label>
+      <input type="number" name="year" min="1995" max="{{ info.reference_year }}"
+             value="{{ values.year or 2016 }}" required>
+
+      <label>Mileage (km)</label>
+      <input type="number" name="km" min="0" step="1000"
+             value="{{ values.km or 80000 }}" required>
+
+      <label>Fuel type</label>
+      <select name="fuel">
+        {% for f in info.fuel_types %}
+          <option {% if values.fuel == f %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Transmission</label>
+      <select name="transmission">
+        {% for t in info.transmissions %}
+          <option {% if values.transmission == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Estimate price</button>
+    </form>
+
+    {% if price is not none %}
+      <div class="result">Estimated price: <b>{{ "{:,}".format(price) }} £</b></div>
+    {% endif %}
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <p class="note">
+      Model used: {{ info.best_model }} |
+      mean absolute error (MAE): {{ "{:,}".format(info.results[info.best_model].MAE) }} £ |
+      R² = {{ info.results[info.best_model].R2 }}
+    </p>
+  </div>
+
+  <script>
+    const brandSelect = document.getElementById("brand");
+    const modelSelect = document.getElementById("model");
+
+    const modelsByBrand = JSON.parse(modelSelect.dataset.modelsByBrand);
+    const selectedModel = JSON.parse(modelSelect.dataset.selected);
+
+    function updateModels() {
+      modelSelect.innerHTML = "";
+
+      for (const m of modelsByBrand[brandSelect.value]) {
+        const option = document.createElement("option");
+        option.textContent = m;
+
+        if (m === selectedModel) {
+            option.selected = true;
+        }
+        
+        modelSelect.appendChild(option);
+      }
+    }
+
+    brandSelect.addEventListener("change", updateModels);
+    updateModels();
+  </script>
+</body>
+</html>

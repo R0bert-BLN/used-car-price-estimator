@@ -1,6 +1,6 @@
 # Used Car Price Estimator
 
-Predicts the price of a used car from its brand, model, age, mileage, fuel type and transmission, using machine learning on about 85,000 UK listings. 
+Predicts the price of a used car from its brand, model, age, mileage, fuel type and transmission, using machine learning on about 85,000 UK listings.
 
 ## Dataset
 
@@ -25,28 +25,29 @@ Columns used: `model`, `year`, `price` (the target), `transmission`, `mileage`, 
 
 ## Exploratory analysis
 
-`src/data_analyzer.py` prints summary statistics and saves four plots in `plots/`:
+`src/data_analyzer.py` prints summary statistics and saves four plots in `plots/`.
 
-## Results: Linear Regression baseline
+## Results
 
 | Model | MAE | RMSE | R² |
 |---|---|---|---|
 | Linear Regression | 2,745 £ | 3,947 £ | 0.799 |
+| Random Forest | 1,820 £ | 2,826 £ | 0.897 |
 
-On average, the estimate is off by about 2,700 £, and the model explains about 80% of the price differences between cars.
+Random Forest is the better model: its average error is about 1,800 £ instead of 2,700 £ (roughly a third lower), and it explains about 90% of the price differences between cars instead of 80%. It has the lowest MAE, so it is the model that gets saved.
 
-![Linear Regression: actual vs predicted price](plots/5_actual_vs_predicted_linear.png)
-
-The plot shows where a linear model falls short. The points follow a curve instead of the red line, because cars lose value faster when they are new:
+A linear model falls short here because cars lose value faster when they are new, so the relationship is a curve, not a straight line:
 - cheap, older cars get some predictions below zero (down to about −16,000 £);
 - cars above roughly 30,000 £ are underestimated.
+
+Random Forest does not assume a straight-line relationship, which suits this pattern.
 
 ## How to run
 
 ```bash
 docker compose up -d
-docker compose exec app python src/data_analyzer.py
-docker compose exec app python src/train.py
+docker compose exec -w /app/src app python data_analyzer.py
+docker compose exec -w /app/src app python train.py
 docker compose down
 ```
 

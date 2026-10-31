@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["sleep", "infinity"]
+    ports:
+      - "5000:5000"
     volumes:
       - ./:/app
